@@ -1,0 +1,123 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "format:IMP-{MM}-{YYYY}-{#####}",
+ "creation": "2024-01-22 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_general",
+  "import_source",
+  "import_file",
+  "column_break_1",
+  "company",
+  "payroll_date",
+  "componente_salarial",
+  "section_status",
+  "status",
+  "import_log_section",
+  "import_log",
+  "import_log_preview"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_general",
+   "fieldtype": "Section Break",
+   "label": "Configuración de Importación"
+  },
+  {
+   "fieldname": "import_source",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Fuente de Datos",
+   "options": "Farmacia (HTML)\nSupermercado (Excel)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "import_file",
+   "fieldtype": "Attach",
+   "label": "Archivo a Procesar",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Empresa",
+   "options": "Company",
+   "default": "User Default",
+   "reqd": 1
+  },
+  {
+   "fieldname": "payroll_date",
+   "fieldtype": "Date",
+   "label": "Fecha de Nómina/Corte",
+   "reqd": 1
+  },
+  {
+   "fieldname": "componente_salarial",
+   "fieldtype": "Link",
+   "label": "Componente Salarial",
+   "options": "Salary Component",
+   "description": "El rubro bajo el cual se cargarán estos valores (ej. Descuento Farmacia).",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_status",
+   "fieldtype": "Section Break",
+   "label": "Estado del Proceso"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Estado",
+   "options": "Pending\nIn Progress\nSuccess\nPartial Success\nError",
+   "read_only": 1,
+   "default": "Pending"
+  },
+  {
+   "fieldname": "import_log_section",
+   "fieldtype": "Section Break",
+   "label": "Registro de Actividad (Log)"
+  },
+  {
+   "fieldname": "import_log",
+   "fieldtype": "Long Text",
+   "hidden": 1,
+   "label": "Log Data",
+   "read_only": 1
+  },
+  {
+   "fieldname": "import_log_preview",
+   "fieldtype": "HTML",
+   "label": "Vista Previa del Log"
+  }
+ ],
+ "is_submittable": 0,
+ "modified": "2024-01-22 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Payroll Extension",
+ "name": "Nomina Import",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
