@@ -1,6 +1,7 @@
 import frappe
 from frappe.model.document import Document
 
+from frappe import _
 class SalarySlipConfirmation(Document):
     
     @frappe.whitelist()
@@ -63,13 +64,13 @@ class SalarySlipConfirmation(Document):
         frappe.sendmail(recipients=[recipient], subject=subject, message=message)
 
     @frappe.whitelist()
-    def get_print_preview(self):
-        """
-        Obtiene el HTML del Salary Slip asociado para mostrarlo en pantalla.
-        """
-        if not self.salary_slip:
-            return "<div>No hay rol de pagos asociado.</div>"
-            
-        # IMPORTANTE: Cambia "Standard" por el nombre exacto de tu formato de impresión si usas uno personalizado
-        html = frappe.get_print("Salary Slip", self.salary_slip, "Standard")
-        return html
+    def get_slip_preview(self):
+        # Genera el HTML usando el motor oficial de Frappe
+        return frappe.get_print(
+            "Salary Slip", 
+            self.salary_slip, 
+            "salary_slip_sd",
+            as_pdf = False, 
+            no_letterhead=0
+        )
+
