@@ -1,0 +1,104 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-02-06 06:03:09.478376",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "custom_rol_employee",
+  "custom_rol_user",
+  "custom_rol_role",
+  "custom_rol_workflow_state",
+  "custom_rol_comment",
+  "custom_rol_signed_on"
+ ],
+ "fields": [
+  {
+   "fieldname": "custom_rol_employee",
+   "fieldtype": "Link",
+   "label": "Empleado",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "custom_rol_user",
+   "fieldtype": "Link",
+   "label": "user",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "custom_rol_role",
+   "fieldtype": "Link",
+   "label": "Rol",
+   "options": "Role",
+   "read_only": 1
+  },
+  {
+   "fieldname": "custom_rol_workflow_state",
+   "fieldtype": "Data",
+   "label": "Estado",
+   "read_only": 1
+  },
+  {
+   "depends_on": "doc.workflow_state == \"Rejected\";",
+   "fieldname": "custom_rol_comment",
+   "fieldtype": "Small Text",
+   "label": "Comentario de Rechazo"
+  },
+  {
+   "fieldname": "custom_rol_signed_on",
+   "fieldtype": "Datetime",
+   "label": "Fecha de Firmado",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-02-06 06:11:16.074992",
+ "modified_by": "Administrator",
+ "module": "Payroll Extension",
+ "name": "Employee Role Approval",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Employee",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

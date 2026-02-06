@@ -250,3 +250,8 @@ app_license = "mit"
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
 
+doc_events = {
+    "Salary Slip": {
+        "on_submit": "sd_custom_app.utils.crear_confirmacion"
+    }
+}
