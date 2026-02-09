@@ -5,6 +5,7 @@ import base64
 import requests
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
+from frappe.utils.file_manager import save_file
 
 from frappe import _
 class SalarySlipConfirmation(Document):
@@ -23,14 +24,14 @@ class SalarySlipConfirmation(Document):
             frappe.throw("Este rol ya ha sido procesado.")
 
         # 1. Ejecutar TU LÓGICA PERSONALIZADA
-        self.ejecutar_logica_negocio(password)
+        pdf_firmado = self.ejecutar_logica_negocio(password)
 
         # 2. Actualizar estado
         #self.status = "Aceptado"
         #self.save(ignore_permissions=True)
 
         # 3. Notificar
-        self.enviar_notificacion_correo()
+        self.enviar_notificacion_correo(pdf_firmado)
 
         return "Aceptado correctamente"
 
@@ -49,7 +50,7 @@ class SalarySlipConfirmation(Document):
         self.enviar_notificacion_correo()
         return "Rechazo enviado"
 
-    def enviar_notificacion_correo(self):
+    def enviar_notificacion_correo(self, pdf_firmado=None):
         recipient = "bi@securitydata.net.ec"
         subject = f"Respuesta Rol: {self.employee} - {self.status}"
 
@@ -60,7 +61,19 @@ class SalarySlipConfirmation(Document):
         if self.status == "Rechazado":
             message += f"<p>Motivo: {self.feedback}</p>"
 
-        frappe.sendmail(recipients=[recipient], subject=subject, message=message)
+        if pdf_firmado:
+            adjuntos = [{
+                "fname": pdf_firmado.file_name,
+                "fcontent": pdf_firmado.get_content()
+            }]
+            frappe.sendmail(
+                recipients=[recipient],
+                subject=subject,
+                message=message,
+                attachments=adjuntos  # Aquí se adjunta el PDF
+            )
+        else:
+            frappe.sendmail(recipients=[recipient], subject=subject, message=message)
 
     @frappe.whitelist()
     def get_slip_preview(self):
@@ -133,8 +146,25 @@ class SalarySlipConfirmation(Document):
             data_res = res_firma.json()
 
             if res_firma.status_code == 200 and data_res.get("respuesta"):
-                # Retorna el primer resultado de la lista de documentos
-                return data_res["resultado"][0]["resultado"]
+                # 1. Obtener el string Base64
+                base64_string = data_res["resultado"][0]["resultado"]
+
+                # 2. Decodificar a bytes
+                pdf_bytes = base64.b64decode(base64_string)
+
+                # 3. Guardar el archivo en Frappe para obtener una URL o nombre de archivo
+                # Esto permite que el PDF exista físicamente en el servidor
+                nombre_archivo = f"Rol_{self.employee}_{self.salary_slip}.pdf".replace(" ", "_")
+                archivo_guardado = save_file(
+                    nombre_archivo,
+                    pdf_bytes,
+                    self.doctype,
+                    self.name,
+                    is_private=1
+                )
+
+                # Retornamos el objeto del archivo para usarlo en el envío
+                return archivo_guardado
 
             elif res_firma.status_code == 200 and not data_res.get("respuesta"):
                 raise Exception(f"Contraseña de firma incorrecta: {data_res.get('mensaje')}")
@@ -148,6 +178,7 @@ class SalarySlipConfirmation(Document):
         except Exception as e:
             frappe.log_error(f"Error en individual_sign: {str(e)}", "Security Data Integration")
             raise e
+
 
     def ejecutar_logica_negocio(self, password):
 
@@ -212,9 +243,11 @@ class SalarySlipConfirmation(Document):
                 # 3. Hacer algo con el PDF firmado (ej. guardarlo en Frappe)
                 frappe.logger().info(f"Documento firmado exitosamente para {self.employee}")
                 # self.guardar_pdf(pdf_firmado)
+                return pdf_firmado
 
         except Exception as e:
             frappe.msgprint(f"Error al firmar: {str(e)}")
+            return None
 
         pass
 
