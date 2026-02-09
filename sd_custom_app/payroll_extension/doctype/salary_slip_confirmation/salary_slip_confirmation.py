@@ -75,8 +75,8 @@ class SalarySlipConfirmation(Document):
         try:
             # 1. Login para obtener el Bearer Token
             payload_login = {
-                "identificador": "TU_USUARIO_API",  # individualSignUsername en Java
-                "password": "TU_PASSWORD_API"  # individualSignPassword en Java
+                "username": "1716165533",  # individualSignUsername en Java
+                "password": "El1princesa25**+"  # individualSignPassword en Java
             }
 
             res_login = requests.post(self.URL_LOGIN, json=payload_login)
@@ -117,6 +117,13 @@ class SalarySlipConfirmation(Document):
                     }
                 ]
             }
+            frappe.logger().info({
+                "DEBUG_SIGN_REQUEST":{
+                    "url": self.URL_FIRMAR,
+                    "headers": headers,
+                    "payload": payload_firma
+                }
+            })
 
             # 4. Realizar la solicitud de firmado
             res_firma = requests.post(self.URL_FIRMAR, json=payload_firma, headers=headers)
@@ -133,7 +140,7 @@ class SalarySlipConfirmation(Document):
                 raise Exception(f"Error de autorización: {data_res.get('mensaje')}")
 
             else:
-                raise Exception(f"Error en proceso de firmado: {res_firma.text}")
+                raise Exception(f"Error en proceso de firmado: {data_res.get('mensaje')}")
 
         except Exception as e:
             frappe.log_error(f"Error en individual_sign: {str(e)}", "Security Data Integration")
