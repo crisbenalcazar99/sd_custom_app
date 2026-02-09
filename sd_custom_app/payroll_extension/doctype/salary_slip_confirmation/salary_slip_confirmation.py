@@ -55,25 +55,26 @@ class SalarySlipConfirmation(Document):
         subject = f"Respuesta Rol: {self.employee} - {self.status}"
 
         message = f"""
-            <p>El empleado {self.employee} ha marcado su rol {self.salary_slip} como <b>{self.status}</b>.</p>
-        """
+        <p>El empleado {self.employee} ha marcado su rol {self.salary_slip} como <b>{self.status}</b>.</p>"""
 
         if self.status == "Rechazado":
             message += f"<p>Motivo: {self.feedback}</p>"
 
+        # Preparamos la lista de adjuntos
+        attachments = []
         if pdf_firmado:
-            adjuntos = [{
+            attachments.append({
                 "fname": pdf_firmado.file_name,
                 "fcontent": pdf_firmado.get_content()
-            }]
-            frappe.sendmail(
-                recipients=[recipient],
-                subject=subject,
-                message=message,
-                attachments=adjuntos  # Aquí se adjunta el PDF
-            )
-        else:
-            frappe.sendmail(recipients=[recipient], subject=subject, message=message)
+            })
+
+        # IMPORTANTE: Usar attachments=attachments siempre, esté vacío o no
+        frappe.sendmail(
+            recipients=[recipient],
+            subject=subject,
+            message=message,
+            attachments=attachments
+        )
 
     @frappe.whitelist()
     def get_slip_preview(self):
@@ -162,6 +163,7 @@ class SalarySlipConfirmation(Document):
                     self.name,
                     is_private=1
                 )
+                frappe.db.commit()
 
                 # Retornamos el objeto del archivo para usarlo en el envío
                 return archivo_guardado
@@ -251,7 +253,7 @@ class SalarySlipConfirmation(Document):
 
         pass
 
-    def cifrar_con_llave_publica(signature_password):
+    def cifrar_con_llave_publica(self, signature_password):
         # 1. Construir la ruta absoluta usando el nombre de tu app
         # frappe.get_app_path busca dentro de 'apps/sd_custom_app/sd_custom_app/...'
         path_to_pem = frappe.get_app_path(
