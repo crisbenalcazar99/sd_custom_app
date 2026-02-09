@@ -2,6 +2,8 @@ import frappe
 from frappe.model.document import Document
 import base64
 import requests
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import padding
 
 from frappe import _
 class SalarySlipConfirmation(Document):
@@ -86,7 +88,7 @@ class SalarySlipConfirmation(Document):
             auth_token = res_login.json().get("resultado")
 
             # 2. Preparar el cifrado de la contraseña de la firma
-            encripted_password = password
+            encripted_password = self.cifrar_con_llave_publica(password)
 
             # 3. Construir el Payload para el firmado
             headers = {
@@ -215,7 +217,31 @@ class SalarySlipConfirmation(Document):
 
         pass
 
-    def cifrar_con_llave_publica(self, llave_publica_base64, signature_password):
+    def cifrar_con_llave_publica(self, signature_password, public_key_file="public_key.pem"):
+
+        try:
+            with open(public_key_file, "rb") as key_file:
+                public_key_bytes = key_file.read()
+
+            # 2. Cargar la llave (Formato PEM)
+            public_key = serialization.load_pem_public_key(public_key_bytes)
+
+            # 3. Cifrar los datos
+            datos_bytes = signature_password.encode('utf-8')
+            datos_cifrados = public_key.encrypt(
+                datos_bytes,
+                padding.PKCS1v15()
+            )
+
+            # 4. Retornar en Base64
+            return base64.b64encode(datos_cifrados).decode('utf-8')
+
+        except FileNotFoundError:
+            return "Error: No se encontró el archivo de la llave."
+        except Exception as e:
+            return f"Error al procesar la llave: {str(e)}"
+
+
         # 1. Decodificar la llave pública de Base64 y cargarla
         public_key_bytes = base64.b64decode(llave_publica_base64)
 
