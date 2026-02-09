@@ -50,25 +50,24 @@ class SalarySlipConfirmation(Document):
         self.enviar_notificacion_correo()
         return "Rechazo enviado"
 
-    def enviar_notificacion_correo(self, pdf_firmado=None):
+    def enviar_notificacion_correo(self, pdf_bytes=None):
         recipient = "bi@securitydata.net.ec"
         subject = f"Respuesta Rol: {self.employee} - {self.status}"
 
         message = f"""
-        <p>El empleado {self.employee} ha marcado su rol {self.salary_slip} como <b>{self.status}</b>.</p>"""
+            <p>El empleado <b>{self.employee}</b> ha marcado su rol <b>{self.salary_slip}</b> como <b>{self.status}</b>.</p>
+        """
 
         if self.status == "Rechazado":
             message += f"<p>Motivo: {self.feedback}</p>"
 
-        # Preparamos la lista de adjuntos
         attachments = []
-        if pdf_firmado:
+        if pdf_bytes:
             attachments.append({
-                "fname": pdf_firmado.file_name,
-                "fcontent": pdf_firmado.get_content()
+                "fname": f"Rol_Firmado_{self.employee}.pdf".replace(" ", "_"),
+                "fcontent": pdf_bytes
             })
 
-        # IMPORTANTE: Usar attachments=attachments siempre, esté vacío o no
         frappe.sendmail(
             recipients=[recipient],
             subject=subject,
@@ -147,26 +146,14 @@ class SalarySlipConfirmation(Document):
             data_res = res_firma.json()
 
             if res_firma.status_code == 200 and data_res.get("respuesta"):
-                # 1. Obtener el string Base64
+                # 1. Obtener el string Base64 del resultado
                 base64_string = data_res["resultado"][0]["resultado"]
 
-                # 2. Decodificar a bytes
+                # 2. Convertir a bytes para el correo (sin guardar en disco)
                 pdf_bytes = base64.b64decode(base64_string)
 
-                # 3. Guardar el archivo en Frappe para obtener una URL o nombre de archivo
-                # Esto permite que el PDF exista físicamente en el servidor
-                nombre_archivo = f"Rol_{self.employee}_{self.salary_slip}.pdf".replace(" ", "_")
-                archivo_guardado = save_file(
-                    nombre_archivo,
-                    pdf_bytes,
-                    self.doctype,
-                    self.name,
-                    is_private=1
-                )
-                frappe.db.commit()
-
-                # Retornamos el objeto del archivo para usarlo en el envío
-                return archivo_guardado
+                # Retornamos solo los bytes
+                return pdf_bytes
 
             elif res_firma.status_code == 200 and not data_res.get("respuesta"):
                 raise Exception(f"Contraseña de firma incorrecta: {data_res.get('mensaje')}")
@@ -231,21 +218,20 @@ class SalarySlipConfirmation(Document):
 
         # 2. Llamada a la función traducida
         try:
-            pdf_firmado = self.individual_sign(
-                pdf_base64=pdf_b64,  # Asumiendo que existe en el contexto
-                username=cedula_empleado,  # username es la cédula
-                password=password,  # clave de la firma .p12
-                tipo_persona="ME",  # o el valor que manejes
+            pdf_bytes = self.individual_sign(
+                pdf_base64=pdf_b64,
+                username=cedula_empleado,
+                password=password,
+                tipo_persona="ME",
                 ruc='1792261848001',
                 x_pos="100",
                 y_pos="100"
             )
 
-            if pdf_firmado:
-                # 3. Hacer algo con el PDF firmado (ej. guardarlo en Frappe)
-                frappe.logger().info(f"Documento firmado exitosamente para {self.employee}")
-                # self.guardar_pdf(pdf_firmado)
-                return pdf_firmado
+            if pdf_bytes:
+                frappe.logger().info(
+                    f"Documento firmado y listo para envío para {self.employee}")
+                return pdf_bytes
 
         except Exception as e:
             frappe.msgprint(f"Error al firmar: {str(e)}")
