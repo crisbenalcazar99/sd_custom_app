@@ -1,6 +1,7 @@
 import frappe
 from frappe.model.document import Document
 import base64
+import requests
 
 from frappe import _
 class SalarySlipConfirmation(Document):
@@ -9,7 +10,7 @@ class SalarySlipConfirmation(Document):
     URL_FIRMAR = "https://datagree.securitydata.net.ec/scexterno/api/firmado/firmarDocumento"
 
     @frappe.whitelist()
-    def procesar_aceptacion(self, passwword=None):
+    def procesar_aceptacion(self, password=None):
         if not password:
             frappe.throw("Se requeire la Contrasena para el firmado")
         """
@@ -19,7 +20,7 @@ class SalarySlipConfirmation(Document):
             frappe.throw("Este rol ya ha sido procesado.")
 
         # 1. Ejecutar TU LÓGICA PERSONALIZADA
-        self.ejecutar_logica_negocio(passwword)
+        self.ejecutar_logica_negocio(password)
 
         # 2. Actualizar estado
         self.status = "Aceptado"
@@ -138,7 +139,7 @@ class SalarySlipConfirmation(Document):
             frappe.log_error(f"Error en individual_sign: {str(e)}", "Security Data Integration")
             raise e
 
-    def ejecutar_logica_negocio(self, passwword):
+    def ejecutar_logica_negocio(self, password):
 
         # 1. Validar que el empleado esté asignado
         if not self.employee:
@@ -189,8 +190,8 @@ class SalarySlipConfirmation(Document):
         try:
             pdf_firmado = self.individual_sign(
                 pdf_base64=pdf_b64,  # Asumiendo que existe en el contexto
-                username=self.cedula_empleado,  # username es la cédula
-                password=self.passwword,  # clave de la firma .p12
+                username=cedula_empleado,  # username es la cédula
+                password=password,  # clave de la firma .p12
                 tipo_persona="ME",  # o el valor que manejes
                 ruc='1792261848001',
                 x_pos="100",

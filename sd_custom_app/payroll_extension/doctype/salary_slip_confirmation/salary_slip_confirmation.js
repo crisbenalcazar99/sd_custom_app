@@ -37,7 +37,7 @@ frappe.ui.form.on('Salary Slip Confirmation', {
                     frappe.call({
                         doc: frm.doc,
                         method: 'procesar_aceptacion',
-                        args: { pwd: values.password },
+                        args: { password: values.password },
                         freeze: true,
                         freeze_message: __("Validando..."),
                         callback: (r) => { 
