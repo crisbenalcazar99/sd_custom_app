@@ -215,3 +215,22 @@ class SalarySlipConfirmation(Document):
 
         pass
 
+    def cifrar_con_llave_publica(self, llave_publica_base64, signature_password):
+        # 1. Decodificar la llave pública de Base64 y cargarla
+        public_key_bytes = base64.b64decode(llave_publica_base64)
+
+        # Cargar la llave (X.509 / SubjectPublicKeyInfo)
+        public_key = serialization.load_der_public_key(public_key_bytes)
+
+        # 2. Cifrar los datos
+        # Nota: Java 'RSA' por defecto suele usar PKCS1v15 padding
+        datos_bytes = signature_password.encode('utf-8')
+
+        datos_cifrados = public_key.encrypt(
+            datos_bytes,
+            padding.PKCS1v15()
+        )
+
+        # 3. Codificar en Base64 y retornar como String
+        return base64.b64encode(datos_cifrados).decode('utf-8')
+
