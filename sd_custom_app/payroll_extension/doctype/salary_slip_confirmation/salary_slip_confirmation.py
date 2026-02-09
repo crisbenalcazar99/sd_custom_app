@@ -1,3 +1,4 @@
+import os
 import frappe
 from frappe.model.document import Document
 import base64
@@ -25,8 +26,8 @@ class SalarySlipConfirmation(Document):
         self.ejecutar_logica_negocio(password)
 
         # 2. Actualizar estado
-        self.status = "Aceptado"
-        self.save(ignore_permissions=True)
+        #self.status = "Aceptado"
+        #self.save(ignore_permissions=True)
 
         # 3. Notificar
         self.enviar_notificacion_correo()
@@ -142,7 +143,7 @@ class SalarySlipConfirmation(Document):
                 raise Exception(f"Error de autorización: {data_res.get('mensaje')}")
 
             else:
-                raise Exception(f"Error en proceso de firmado: {data_res.get('mensaje')}")
+                raise Exception(f"Error en proceso de firmado: {data_res.get('mensaje')} {encripted_password}")
 
         except Exception as e:
             frappe.log_error(f"Error en individual_sign: {str(e)}", "Security Data Integration")
@@ -217,46 +218,36 @@ class SalarySlipConfirmation(Document):
 
         pass
 
-    def cifrar_con_llave_publica(self, signature_password, public_key_file="public_key.pem"):
+    def cifrar_con_llave_publica(signature_password):
+        # 1. Construir la ruta absoluta usando el nombre de tu app
+        # frappe.get_app_path busca dentro de 'apps/sd_custom_app/sd_custom_app/...'
+        path_to_pem = frappe.get_app_path(
+            'sd_custom_app',
+            'payroll_extension',
+            'doctype',
+            'salary_slip_confirmation',
+            'public_key.pem'
+        )
 
+        # Verificación de seguridad
+        if not os.path.exists(path_to_pem):
+            frappe.throw(f"No se encontró el archivo de la llave en: {path_to_pem}")
+
+        # 2. Cargar la llave desde el archivo PEM
         try:
-            with open(public_key_file, "rb") as key_file:
-                public_key_bytes = key_file.read()
-
-            # 2. Cargar la llave (Formato PEM)
-            public_key = serialization.load_pem_public_key(public_key_bytes)
-
-            # 3. Cifrar los datos
-            datos_bytes = signature_password.encode('utf-8')
-            datos_cifrados = public_key.encrypt(
-                datos_bytes,
-                padding.PKCS1v15()
-            )
-
-            # 4. Retornar en Base64
-            return base64.b64encode(datos_cifrados).decode('utf-8')
-
-        except FileNotFoundError:
-            return "Error: No se encontró el archivo de la llave."
+            with open(path_to_pem, "rb") as key_file:
+                public_key = serialization.load_pem_public_key(
+                    key_file.read()
+                )
         except Exception as e:
-            return f"Error al procesar la llave: {str(e)}"
+            frappe.throw(f"Error al leer el archivo PEM: {str(e)}")
 
-
-        # 1. Decodificar la llave pública de Base64 y cargarla
-        public_key_bytes = base64.b64decode(llave_publica_base64)
-
-        # Cargar la llave (X.509 / SubjectPublicKeyInfo)
-        public_key = serialization.load_der_public_key(public_key_bytes)
-
-        # 2. Cifrar los datos
-        # Nota: Java 'RSA' por defecto suele usar PKCS1v15 padding
+        # 3. Cifrar
         datos_bytes = signature_password.encode('utf-8')
-
         datos_cifrados = public_key.encrypt(
             datos_bytes,
             padding.PKCS1v15()
         )
 
-        # 3. Codificar en Base64 y retornar como String
+        # 4. Retornar en Base64
         return base64.b64encode(datos_cifrados).decode('utf-8')
-
