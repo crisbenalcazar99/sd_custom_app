@@ -51,7 +51,7 @@ class SalarySlipConfirmation(Document):
         return "Rechazo enviado"
 
     def enviar_notificacion_correo(self, pdf_bytes=None):
-        recipient = "bi@securitydata.net.ec"
+        recipient = "crisbenalp@gmail.com"
         subject = f"Respuesta Rol: {self.employee} - {self.status}"
 
         message = f"""
